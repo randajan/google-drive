@@ -1,0 +1,56 @@
+{
+  "name": "@randajan/google-drive",
+  "version": "0.0.1",
+  "description": "Path-style, promise-based Node.js wrapper that makes Google Drive file & folder CRUD, uploads/downloads, and metadata handling.",
+  "repository": "randajan/google-drive",
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "exports": {
+    ".": {
+      "import": "./dist/esm/index.mjs",
+      "require": "./dist/cjs/index.cjs"
+    }
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@randajan/simple-lib": "^3.2.0",
+    "cors": "^2.8.5",
+    "express": "^5.1.0"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "google-drive",
+    "google-drive-api",
+    "google-api",
+    "google-auth",
+    "nodejs",
+    "cloud-storage",
+    "file-upload",
+    "file-download",
+    "filesystem",
+    "crud",
+    "path-style",
+    "wrapper",
+    "library",
+    "sdk"
+  ],
+  "homepage": "https://github.com/randajan/google-drive",
+  "bugs": {
+    "url": "https://github.com/randajan/google-drive/issues"
+  },
+  "author": {
+    "name": "Jan Randa",
+    "email": "jnranda@gmail.com",
+    "url": "https://www.linkedin.com/in/randajan/"
+  },
+  "dependencies": {
+    "@randajan/props": "^0.1.4",
+    "googleapis": "^150.0.1",
+    "mime-types": "^3.0.1"
+  }
+}
