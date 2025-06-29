@@ -16,10 +16,7 @@ slib(
         lib:{
             entries:[
                 "index.js",
-                "drive/Drive.js",
-                "drive/Sync.js",
-                "calendar/Calendar.js",
-                "people/People.js"
+                "./sync/index.js"
             ]
         },
     }

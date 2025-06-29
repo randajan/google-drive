@@ -1,16 +1,8 @@
 
-import { info, log } from "@randajan/simple-lib/lib";
-import { effaceScopes } from "./auth/scopes";
-import { extendURL } from "./tools";
-import { OAuthClient } from "./auth/Client";
+import { GoogleDrive } from "./drive/Drive";
 
-export default (options)=>new OAuthClient(options);
+export default GoogleDrive;
 
 export {
-    OAuthClient
-}
-
-export {
-    effaceScopes,
-    extendURL
+    GoogleDrive
 }

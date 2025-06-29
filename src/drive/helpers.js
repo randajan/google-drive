@@ -4,6 +4,7 @@ export const _folderMime = "application/vnd.google-apps.folder";
 
 export const isFolder = f=>f?.mimeType === _folderMime;
 export const isFile = f=>f?.mimeType && !isFolder(f);
+export const isNativeFile = f=>!isFolder(f) && f?.mimeType?.startsWith("application/vnd.google-apps.");
 
 export const concatFields = (to, from) => (Array.isArray(from) && from.length) ? [...new Set(to.concat(from))] : to;
 

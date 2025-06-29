@@ -1,14 +1,16 @@
 import { google } from "googleapis";
 import { solids, virtual } from "@randajan/props";
-import { getBy, getById, getByPath, mapFiles, readFile } from "./pull";
-import { _defaultFields, _folderMime, concatFields, queryFile, queryFolder } from "./helpers";
-import { createFolder, pushFileByPath, updateFileById } from "./push";
-
-export default (auth, rootId, defaultFields=[])=>new GoogleDrive(auth, rootId, defaultFields);
+import { getById, getByPath, mapFiles, readFile } from "./pull";
+import { _defaultFields, _folderMime, concatFields, isFile, isFolder, isNativeFile, queryFile, queryFolder } from "./helpers";
+import { createFolder, deleteById, pushFileByPath, updateFileById } from "./push";
 
 export class GoogleDrive {
 
-    constructor(auth, rootId, defaultFields = []) {
+    constructor({
+        auth,
+        rootId,
+        defaultFields = []
+    }) {
         defaultFields = concatFields(_defaultFields, defaultFields);
 
         solids(this, {
@@ -22,11 +24,21 @@ export class GoogleDrive {
     msg(text, file = "") {
         const folder = ` folder '${this.rootId}'`;
         file = file ? ` file '${file}'` : "";
-        return `GoogleDrive: ${folder}${file} ` + text;
+        return `GoogleDrive:${folder}${file} ` + text;
     }
 
-    isFolder(any) { return any?.mimeType === _folderMime; }
-    isFile(any) { return any?.mimeType && !this.isFolder(any); }
+    isFolder(any) { return isFolder(any); }
+    isFile(any) { return isFile(any); }
+    isNativeFile(any) { return isNativeFile(any); }
+
+    async ping(throwError = true) {
+        const { api } = this;
+        try { await api.about.get({ fields: 'user' }); return 200; }
+        catch (err) {
+            if (!throwError) { return err.code; }
+            throw new Error(this.msg(err.message), { cause:err }); 
+        }
+    }
 
     async getById(fileId, fields = []) {
         const { api, defaultFields } = this;
@@ -41,7 +53,7 @@ export class GoogleDrive {
         return getByPath(this, false, relPath, concatFields(this.defaultFields, fields));
     }
 
-    async readFileById(fileId, stream = true, fields=[]) {
+    async readFileById(fileId, stream = true, fields = []) {
         const file = await this.getById(fileId, fields);
         if (!file) { throw new Error(this.msg(`id doesn't exists`, fileId)); }
         if (!this.isFile(file)) { throw new Error(this.msg(`id isn't file`, fileId)); }
@@ -49,7 +61,7 @@ export class GoogleDrive {
         return file;
     }
 
-    async readFile(relPath, stream = true, fields=[]) {
+    async readFile(relPath, stream = true, fields = []) {
         const file = await getByPath(this, true, relPath, concatFields(this.defaultFields, fields));
         file.content = await readFile(this.api, file.id, stream);
         return file;
@@ -75,6 +87,20 @@ export class GoogleDrive {
     async createFolder(parentId, name, fields = []) {
         const { api, rootId, defaultFields } = this;
         return createFolder(api, parentId || rootId, name, concatFields(defaultFields, fields));
+    }
+
+    async deleteById(fileId) {
+        await deleteById(this.api, fileId);
+    }
+
+    async deleteFile(relPath) {
+        const file = await this.getFile(relPath, ["id"]);
+        await this.deleteById(file.id);
+    }
+
+    async deleteFolder(relPath) {
+        const folder = await this.getFolder(relPath, ["id"]);
+        await this.deleteById(folder.id);
     }
 
     async map(parentId, callback, fields = []) {
