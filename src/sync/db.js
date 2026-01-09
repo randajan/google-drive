@@ -4,7 +4,9 @@ import createFileDB from "@randajan/file-db";
 
 export const createDB = (rootPath) => {
 
-    const file = createFileDB({ dir: path.dirname(rootPath) }).link("." + path.basename(rootPath));
+    const file = createFileDB({
+        dir: path.dirname(rootPath)
+    }).link("." + path.basename(rootPath), { timeout:3000 });
     const mapPromise = file.optimize().then(_=>file.entries()).then(e=>new Map(e));
 
     file.set = async (relPath, data)=>{
