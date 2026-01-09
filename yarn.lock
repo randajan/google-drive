@@ -148,6 +148,13 @@
   resolved "https://registry.yarnpkg.com/@randajan/props/-/props-0.1.4.tgz#af4fa4327d69e1cbfd281df0c2e546cf6761f66d"
   integrity sha512-F0qkf+s2p6SEO5nkHNCAL34/m39CAPF8j0+isx7TazvBHk8BXoCQxLEM5f6PL3G6R1TCSFVkqerI4T017yTQBA==
 
+"@randajan/pulse@^1.1.3":
+  version "1.1.3"
+  resolved "https://registry.yarnpkg.com/@randajan/pulse/-/pulse-1.1.3.tgz#052477f0ad6b15a6bd60700d9e8264c9bb0be3f8"
+  integrity sha512-iXA/yWDU93w9QdqsMw31UW4LjY31nO5CGuLmBou2zy5izFjN8b9R/7vgmKS4LVqGGX7kqsjduHfOS2gu93H0fw==
+  dependencies:
+    "@randajan/props" "^0.1.4"
+
 "@randajan/simple-lib@^3.2.0":
   version "3.2.0"
   resolved "https://registry.yarnpkg.com/@randajan/simple-lib/-/simple-lib-3.2.0.tgz#f34e9774724aea8f4ee2d6a64875427638435d19"

@@ -1,4 +1,5 @@
 import { URL } from "url";
+import { _modes, _onMissingActions, _recStates } from "./consts";
 
 export const sliceMap = (arr, size, callback) => {
     size = Math.max(1, size) || 1;
@@ -34,6 +35,22 @@ export const validateFn = (required, fn, errProp)=>{
     if (!fn && !required) { return; }
     if (typeof fn === "function") { return fn; }
     throw new Error(`${errProp} is not a valid function`);
+}
+
+export const validateMode = (mode)=>{
+    if (_modes.includes(mode)) { return mode; }
+    throw new Error(`Mode '${defaultMode}' is unexpected. Should be one of: '${_modes.join("', '")}'`);
+}
+
+export const validateOnMissing = (fn, errProp)=>{
+    fn = validateFn(true, fn, errProp);
+    return async(...a)=>{
+        const res = await fn(...a);
+        if (res == null) { return _onMissingActions[0]; }
+        if (_onMissingActions.includes(res)) { return res; }
+        console.warn(`GoogleDriveSync onMissing(...) should return one of: '${_onMissingActions.join("', '")}'`);
+        return _onMissingActions[0];
+    }
 }
 
 

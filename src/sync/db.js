@@ -24,7 +24,8 @@ export const createDB = (rootPath) => {
 
     file.get = async (relPath)=>{
         const map = await mapPromise;
-        return map.get(relPath) || {};
+        const rec = map.get(relPath);
+        return rec ? {...rec} : {};
     }
 
     file.getAll = async ()=>new Map(await mapPromise);

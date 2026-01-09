@@ -2,6 +2,7 @@
 import { info, log } from "@randajan/simple-lib/node";
 import { GoogleOAuth2 } from "@randajan/oauth2-client/google";
 import { GoogleDriveSync } from "../../../dist/esm/sync/index.mjs";
+import createPulse from "@randajan/pulse";
 import express from 'express';
 import path from "path";
 
@@ -15,9 +16,9 @@ const oauth = new GoogleOAuth2({
     isOffline:true,
     landingUri:"http://localhost:3000",
     fallbackUri:"http://localhost:3000",
-    // scopes:[
-    //     "drive"
-    // ],
+    scopes:[
+        "drive"
+    ],
     onAuth:async (account)=>{
         console.log(await account.tokens());
     },
@@ -29,14 +30,24 @@ const oauth = new GoogleOAuth2({
 
 const account = oauth.account({access_token:env.token});
 const gsync = new GoogleDriveSync({
+    mode:"MERGE",
     auth:account.auth,
-    remoteRootId:"102xPBlMF5InhmH6JQbs-YAZPN-v-2Xe-",
+    remoteRootId:"17BTF1AQJ6ADpjmZF6_oduDMenbs9Nn3I",
     localRootPath:path.join(info.dir.root, info.dir.dist, "../drive"),
     caseSensitive:false,
-    debug:console.log
+    debug:(event, ...a)=>{
+        if (event !== "Sweep" && event !== "Ok") { console.log(event, ...a); }
+    }
 });
 
-gsync.refresh().catch(console.error);
+createPulse({
+    autoStart:true,
+    interval:5000,
+    onPulse:async _=>{
+        console.log("---");
+        await gsync.sync().catch(console.error);
+    }
+});
 
 const app = express();
 const PORT = 3999;
@@ -45,14 +56,14 @@ const PORT = 3999;
 app.use(cors());
 
 
-app.get("/oauth/init", (req, res)=>{
+app.get("/oauth/google/init", (req, res)=>{
     const { query } = req;
     const url = oauth.getInitAuthURL(query.landingUri);
     res.redirect(url);
 });
 
 
-app.get("/oauth/exit", async (req, res)=> {
+app.get("/oauth/google/exit", async (req, res)=> {
     const { query } = req;
     const redirect = await oauth.getExitAuthURL(query.code, query.state);
     res.redirect(redirect);
