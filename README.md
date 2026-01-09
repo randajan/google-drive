@@ -11,10 +11,6 @@ Minimal promise-based toolkit that makes the Google Drive API feel like a local 
 - Batteries included: read/write/move/sync helpers
 - Zero boilerplate: wraps the official googleapis client
 
-## Status
-
-This library is experimental. Expect sharp edges and breaking changes until v1.0.
-
 ## Exports
 
 The package exposes two main entry points:
