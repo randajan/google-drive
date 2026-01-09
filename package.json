@@ -1,6 +1,6 @@
 {
   "name": "@randajan/google-drive",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Path-style, promise-based Node.js wrapper that makes Google Drive file & folder CRUD, uploads/downloads, and metadata handling.",
   "repository": "randajan/google-drive",
   "type": "module",
