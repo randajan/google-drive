@@ -5,11 +5,6 @@ import { lookup as mimeLookup } from "mime-types";
 import { readFile } from "../drive/pull";
 
 
-
-export const pathNormalize = (relPath = "") => {
-    return relPath.replace(/^([./\\])+/, "");
-};
-
 export const localFormat = (file)=>{
     file.ts = Math.round(file.mtimeMs);
     return file;
@@ -78,7 +73,7 @@ export const mapLocal = async (rootDir) => {
     return result;
 };
 
-export const mapRemote = async (drive, debug, caseSensitive=false) => {
+export const mapRemote = async (drive, log, caseSensitive=false) => {
     const result = new Map();
     const dedup = new Map();
 
@@ -87,14 +82,14 @@ export const mapRemote = async (drive, debug, caseSensitive=false) => {
             file = remoteFormat(file);
 
             const relPath = file.relPath = (relBase ? `${relBase}/` : "") + file.name;
-            if (drive.isNativeFile(file)) { debug("Excluded native file", relPath); return; }
+            if (drive.isNativeFile(file)) { log("Excluded native file", relPath); return; }
 
             //detect duplicates because at Google drive they are possible
             const rpCheck = caseSensitive ? relPath : relPath.toLowerCase();
             const bro = dedup.get(rpCheck);
             if (bro) {
-                if (bro.cts < file.cts) { debug("Excluded duplicate", relPath); return; }
-                debug("Excluded duplicate", bro.relPath);
+                if (bro.cts < file.cts) { log("Excluded duplicate", relPath); return; }
+                log("Excluded duplicate", bro.relPath);
                 result.delete(bro.relPath);
                 dedup.delete(rpCheck);
             }

@@ -1,3 +1,4 @@
+import path from "path";
 import { URL } from "url";
 import { _modes, _onMissingActions, _recStates } from "./consts";
 
@@ -51,6 +52,31 @@ export const validateOnMissing = (fn, errProp)=>{
         console.warn(`GoogleDriveSync onMissing(...) should return one of: '${_onMissingActions.join("', '")}'`);
         return _onMissingActions[0];
     }
+}
+
+export const normalizeRelPath = (relPath = "", fastPath = false)=>{
+    if (relPath == null || relPath === "") { return ""; }
+
+    if (
+        fastPath &&
+        relPath &&
+        relPath.indexOf("\\") === -1 &&
+        relPath.indexOf("//") === -1 &&
+        !relPath.startsWith("./") &&
+        !relPath.startsWith("../") &&
+        !relPath.startsWith("/")
+    ) {
+        return relPath;
+    }
+
+    const cleaned = relPath.replace(/\\/g, "/");
+    const trimmed = cleaned.replace(/^([./])+/, "");
+    const normalized = path.posix.normalize(trimmed).replace(/^\/+/, "");
+    return normalized === "." ? "" : normalized;
+}
+
+export const splitRelPath = (relPath = "", fastPath = false)=>{
+    return normalizeRelPath(relPath, fastPath).split("/").filter(Boolean);
 }
 
 

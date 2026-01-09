@@ -85,7 +85,7 @@ new GoogleDriveSync({
   mode,
   onMissing,
   caseSensitive,
-  debug
+  logger
 })
 ```
 
@@ -95,19 +95,19 @@ new GoogleDriveSync({
 - `mode` (`MERGE` | `PULL` | `PUSH`, default `MERGE`)
 - `onMissing` (function, see below)
 - `caseSensitive` (default false): path de-duplication sensitivity on local
-- `debug` (function, default no-op): `debug(label, relPath)`
+- `logger` (function, default no-op): `logger(label, relPath)`
 
 ### Methods
 
-- `sync()`  
+- `sync(loggerOnce)`  
   Scans both sides and applies the sync decision tree.
-- `pull(relPath)`  
+- `pull(relPath, loggerOnce)`  
   Force one file to be pulled from remote to local.
   If file not exist on remote the local file will be removed.
-- `push(relPath)`  
+- `push(relPath, loggerOnce)`  
   Force one file to be pushed from local to remote.
   If file not exist on local the remote file will be removed.
-- `remove(relPath)`  
+- `remove(relPath, loggerOnce)`  
   Force removal on both sides.
 
 ### onMissing()
@@ -132,7 +132,7 @@ Default behavior (if you keep the built-in callback):
 
 ### Debug messages
 
-`debug(label, relPath)` receives a short action label. Common labels:
+`logger(label, relPath)` receives a short action label. Common labels:
 - `Sweep` (neither side exists)
 - `Ok` (timestamps match, no action)
 - `Pull new` / `Push new` - new file in database

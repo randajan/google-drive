@@ -35,7 +35,7 @@ const gsync = new GoogleDriveSync({
     remoteRootId:"17BTF1AQJ6ADpjmZF6_oduDMenbs9Nn3I",
     localRootPath:path.join(info.dir.root, info.dir.dist, "../drive"),
     caseSensitive:false,
-    debug:(event, ...a)=>{
+    logger:(event, ...a)=>{
         if (event !== "Sweep" && event !== "Ok") { console.log(event, ...a); }
     }
 });

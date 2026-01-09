@@ -1,6 +1,7 @@
 import { promises as fsp } from "fs";
 import path from "path";
-import { localStat, pathNormalize, pullFile, pushFile, remoteStat, mapLocal, mapRemote } from "./tools";
+import { localStat, pullFile, pushFile, remoteStat, mapLocal, mapRemote } from "./tools";
+import { normalizeRelPath } from "../tools";
 
 const _recModes = ["DEL", "PUSH", "PULL"];
 
@@ -19,20 +20,21 @@ const detectMisssing = async (onMissing, rec, nfo)=>{
     delete rec.missingSide;
 }
 
-const _sync2 = async ({ drive, debug, mode, onMissing }, localRootPath, relPath, rec, local, remote) => {
+const _sync2 = async ({ drive, mode, onMissing }, localRootPath, relPath, rec, local, remote, log) => {
 
     const isNew = !rec;
     if (isNew) { rec = {}; }
+    else { relPath = normalizeRelPath(relPath, true); }
 
     //doesn't exist at all = cleanup
     if (!remote && !local) {
-        debug("Sweep", relPath);
+        log("Sweep", relPath);
         return;
     }
 
     //timestamps are correct = nothing/exit
     if (remote && local && rec.tsRemote == remote.ts && rec.tsLocal == local.ts) {
-        debug("Ok", relPath);
+        log("Ok", relPath);
         return { ...rec, state: "OK" };
     }
 
@@ -43,22 +45,22 @@ const _sync2 = async ({ drive, debug, mode, onMissing }, localRootPath, relPath,
 
     const force = (isRecFresh && _recModes.includes(rec.state)) ? rec.state : mode;
     const auto = (!local || (remote && local.ts < remote.ts)) ? "PULL" : (!remote || (local && remote.ts < local.ts)) ? "PUSH" : "OK";
-    const missAct = (isNew || mode !== "MERGE") ? null : await detectMisssing(onMissing, rec, { mode, relPath, local, remote });
+    const missAct = (isNew || force !== "MERGE") ? null : await detectMisssing(onMissing, rec, { mode, relPath, local, remote });
 
     if (missAct === "remove" || force === "DEL" || (force === "PUSH" && !local) || (force === "PULL" && !remote)) {
-        debug(`${!remote ? "Pull" : "Push"} remove`, relPath);
+        log(`${!remote ? "Pull" : "Push"} remove`, relPath);
         if (local) { await fsp.unlink(absPath); }
         if (remote) { await drive.deleteById(remote.id); }
         return;
     } else if (missAct === "wait") {
-        debug(`Missing ${rec.missingSide}`, relPath);
+        log(`Missing ${rec.missingSide}`, relPath);
         rec.state = "MISSING";
     } else if (force === "PULL" || (force === "MERGE" && auto === "PULL")) {
-        debug(`Pull ${isNew ? "new" : !local ? "revive" : (auto === "PULL" ? "update" : "overwrite")}`, relPath);
+        log(`Pull ${isNew ? "new" : !local ? "revive" : (auto === "PULL" ? "update" : "overwrite")}`, relPath);
         local = await pullFile(drive, absPath, remote.id);
         rec.state = "OK";
     } else if (force === "PUSH" || (force === "MERGE" && auto === "PUSH")) {
-        debug(`Push ${isNew ? "new" : !remote ? "revive" : (auto === "PUSH" ? "update" : "overwrite")}`, relPath);
+        log(`Push ${isNew ? "new" : !remote ? "revive" : (auto === "PUSH" ? "update" : "overwrite")}`, relPath);
         remote = await pushFile(drive, localRootPath, relPath);
         rec.state = "OK";
     }
@@ -69,15 +71,15 @@ const _sync2 = async ({ drive, debug, mode, onMissing }, localRootPath, relPath,
     return rec;
 }
 
-export const syncFile = async (sync, _sync, state, relPath) => {
+export const syncFile = async (sync, _sync, state, relPath, loggerOnce = (()=>{})) => {
     const { localRootPath } = sync;
-    const { db, drive, debug } = _sync;
-    
+    const { db, drive, logger } = _sync;
+    const log = (...a)=>{ logger(...a); loggerOnce(...a); }
 
     try { await drive.ping(); }
-    catch(err) { debug(err.message); return; }
+    catch(err) { log(err.message); return; }
 
-    relPath = pathNormalize(relPath);
+    relPath = normalizeRelPath(relPath);
     const absPath = path.join(localRootPath, relPath);
 
     const rec = { ...await db.get(relPath), state };
@@ -88,20 +90,21 @@ export const syncFile = async (sync, _sync, state, relPath) => {
         localStat(absPath)
     ]);
 
-    await db.set(relPath, await _sync2(_sync, localRootPath, relPath, rec, local, remote));
+    await db.set(relPath, await _sync2(_sync, localRootPath, relPath, rec, local, remote, log));
 }
 
 
 
-export const syncFiles = async (sync, _sync) => {
+export const syncFiles = async (sync, _sync, loggerOnce = (()=>{})) => {
     const { localRootPath } = sync;
-    const { db, drive, debug } = _sync;
+    const { db, drive, logger } = _sync;
+    const log = (...a)=>{ logger(...a); loggerOnce(...a); }
 
     try { await drive.ping(); }
-    catch(err) { debug(err.message); return; }
+    catch(err) { log(err.message); return; }
 
     const [remotes, locals, recs] = await Promise.all([
-        mapRemote(drive, debug, sync.caseSensitive),
+        mapRemote(drive, log, sync.caseSensitive),
         mapLocal(localRootPath),
         db.getAll()
     ]);
@@ -112,7 +115,7 @@ export const syncFiles = async (sync, _sync) => {
         const rec = recs.get(relPath);
         const local = locals.get(relPath);
         const remote = remotes.get(relPath);
-        await db.set(relPath, await _sync2(_sync, localRootPath, relPath, rec, local, remote));
+        await db.set(relPath, await _sync2(_sync, localRootPath, relPath, rec, local, remote, log));
     }
 
     await db.optimize();

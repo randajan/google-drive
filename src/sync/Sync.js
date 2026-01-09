@@ -13,13 +13,13 @@ export class GoogleDriveSync {
         localRootPath,
         onMissing=(rec=>rec.missingCount > 3 ? "remove" : "wait"),
         caseSensitive=false,
-        debug=(()=>{})
+        logger=(()=>{})
     }) {
         const _p = {};
 
         _p.mode = validateMode(mode);
         _p.onMissing = validateOnMissing(onMissing, "onMissing");
-        _p.debug = validateFn(true, debug, "debug");
+        _p.logger = validateFn(true, logger, "logger");
 
         _p.drive = new GoogleDrive({
             auth,
@@ -38,26 +38,26 @@ export class GoogleDriveSync {
         vault.set(this, _p);
     }
 
-    async pull(relPath) {
+    async pull(relPath, loggerOnce) {
         const _p = vault.get(this);
-        return syncFile(this, _p, "PULL", relPath);
+        return syncFile(this, _p, "PULL", relPath, loggerOnce);
     }
 
-    async push(relPath) {
+    async push(relPath, loggerOnce) {
         const _p = vault.get(this);
-        return syncFile(this, _p, "PUSH", relPath);
+        return syncFile(this, _p, "PUSH", relPath, loggerOnce);
     }
 
-    async remove(relPath) {
+    async remove(relPath, loggerOnce) {
         const _p = vault.get(this);
-        return syncFile(this, _p, "DEL", relPath);
+        return syncFile(this, _p, "DEL", relPath, loggerOnce);
     }
 
 
-    async sync() {
+    async sync(loggerOnce) {
         const _p = vault.get(this);
         if (_p.pending) { return _p.pending; }
-        const res = _p.pending = syncFiles(this, _p);
+        const res = _p.pending = syncFiles(this, _p, loggerOnce);
         delete _p.pending;
         return res;
     }

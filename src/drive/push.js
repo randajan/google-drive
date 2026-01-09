@@ -1,3 +1,4 @@
+import { splitRelPath } from "../tools";
 import { _defaultFields, _folderMime, qName, qParent, queryFile, queryFolder } from "./helpers";
 import { getBy } from "./pull";
 
@@ -34,7 +35,7 @@ export const deleteById = async (api, fileId) => {
 
 export const pushFileByPath = async (drive, relPath, body, mimeType = "text/plain", fields = _defaultFields, create = false, update = false) => {
     const { api, rootId } = drive;
-    const segs = relPath.split("/").filter(Boolean);
+    const segs = splitRelPath(relPath);
     const last = segs.length - 1;
     let parentId = rootId;
     let file = null;
